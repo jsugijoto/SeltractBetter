@@ -69,7 +69,7 @@ class seltract:
         logging.info("Side/Total Tab selected")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Side/Total')
-        sleep(5)
+        sleep(3)
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         relevant_cols = ['pggc-col--time', 'pggc-col--team', 'pggc-col--open',
                             'pggc-col--current',  'pggc-col--cash', 'pggc-col--tickets']
@@ -101,7 +101,7 @@ class seltract:
         logging.info("Sides Tab selected")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Sides')
-        sleep(5)
+        sleep(3)
 
         relevant_cols = ['pggc-col--time', 'pggc-col--cash', 'pggc-col--tickets']
         tomorrow = False
@@ -134,7 +134,7 @@ class seltract:
         logging.info("Getting MoneyLine Delta...")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('ML | RL | PL')
-        sleep(5)
+        sleep(3)
 
         relevant_cols = ['pggc-col--time', 'pggc-col--open', 'pggc-col--current']
         tomorrow = False
