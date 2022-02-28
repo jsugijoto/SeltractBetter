@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 from time import sleep
 import datetime
+import numpy as np
 import pandas as pd
 from dateutil.parser import parse
 
@@ -18,7 +19,7 @@ class seltract:
         self.main()
         
     def load_page(self):
-        url = "https://pregame.com/game-center/?d=1643702400000&t=0&l=NaN&a=3&s=AwayRot&m=false&b=undefined&o=Current&c=All&k="
+        url = "https://pregame.com/game-center"
         self.driver.get(url)
         sleep(3)
 
@@ -36,14 +37,18 @@ class seltract:
 
     def createOutput(self):
         df = pd.DataFrame()
-        df['Date'] = self.dict['time']
-        df['Team'] = self.dict['team']
-        df['Cash'] = self.dict['cash']
-        df['Tickets'] = self.dict['tickets']
-        df['Cash Sides'] = self.dict['cash_sides']
-        df['Ticket Sides'] = self.dict['tickets_sides']
-        df['Open ML'] = self.dict['open_ML']
-        df['Current ML'] = self.dict['current_ML']
+        min = np.inf
+        for keys in self.dict.keys():
+            if len(self.dict[keys]) < min:
+                min = len(self.dict[keys])
+        df['Date'] = self.dict['time'][:min]
+        df['Team'] = self.dict['team'][:min]
+        df['Cash'] = self.dict['cash'][:min]
+        df['Tickets'] = self.dict['tickets'][:min]
+        df['Cash Sides'] = self.dict['cash_sides'][:min]
+        df['Ticket Sides'] = self.dict['tickets_sides'][:min]
+        df['Open ML'] = self.dict['open_ML'][:min]
+        df['Current ML'] = self.dict['current_ML'][:min]
 
         df.apply(self.calculateDelta, axis=1)
         df['Delta'] = self.dict['delta']
