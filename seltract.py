@@ -47,10 +47,12 @@ class seltract:
         df['Open ML'] = self.dict['open_ML'][:min]
         df['Current ML'] = self.dict['current_ML'][:min]
 
+        logging.info("Calculating Delta")
         df.apply(self.calculateDelta, axis=1)
-        df['Delta'] = self.dict['delta']
+        df['Delta'] = self.dict['delta'][:min]
+        logging.info("Calculating MoneyLineDelta")
         df.apply(self.calculateMoneyLineDelta, axis=1)
-        df['ML Delta'] = self.dict['ML_Delta']
+        df['ML Delta'] = self.dict['ML_Delta'][:min]
         logging.info("Filtering (beta)...")
         df.apply(self.filter, axis=1)
 
@@ -160,7 +162,6 @@ class seltract:
             self.dict['current_ML'].append("-")
 
     def calculateDelta(self, row):
-        logging.info("Calculating Delta")
         if 'delta' not in self.dict:
                 self.dict['delta'] = []
         delta1 = row['Cash Sides'].strip('%')
@@ -172,7 +173,6 @@ class seltract:
             self.dict['delta'].append(delta)
 
     def calculateMoneyLineDelta(self, row):
-        logging.info("Calculating MoneyLineDelta")
         if 'ML_Delta' not in self.dict:
             self.dict['ML_Delta'] = []
         delta1 = row['Open ML']
