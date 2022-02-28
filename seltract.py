@@ -2,6 +2,7 @@
 
 from operator import index
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -43,23 +44,28 @@ class seltract:
         for keys in self.dict.keys():
             if len(self.dict[keys]) < min:
                 min = len(self.dict[keys])
-        df['Date'] = self.dict['time'][:min]
-        df['Team'] = self.dict['team'][:min]
-        df['Cash'] = self.dict['cash'][:min]
-        df['Tickets'] = self.dict['tickets'][:min]
-        df['Cash Sides'] = self.dict['cash_sides'][:min]
-        df['Ticket Sides'] = self.dict['tickets_sides'][:min]
-        df['Open ML'] = self.dict['open_ML'][:min]
-        df['Current ML'] = self.dict['current_ML'][:min]
+        try:
+            df['Date'] = self.dict['time'][:min]
+            df['Team'] = self.dict['team'][:min]
+            df['Cash'] = self.dict['cash'][:min]
+            df['Tickets'] = self.dict['tickets'][:min]
+            df['Cash Sides'] = self.dict['cash_sides'][:min]
+            df['Ticket Sides'] = self.dict['tickets_sides'][:min]
+            df['Open ML'] = self.dict['open_ML'][:min]
+            df['Current ML'] = self.dict['current_ML'][:min]
 
-        logging.info("Calculating Delta")
-        df.apply(self.calculateDelta, axis=1)
-        df['Delta'] = self.dict['delta'][:min]
-        logging.info("Calculating MoneyLineDelta")
-        df.apply(self.calculateMoneyLineDelta, axis=1)
-        df['ML Delta'] = self.dict['ML_Delta'][:min]
-        #logging.info("Filtering (beta)...")
-        #df.apply(self.filter, axis=1)
+            logging.info("Calculating Delta")
+            df.apply(self.calculateDelta, axis=1)
+            df['Delta'] = self.dict['delta'][:min]
+            logging.info("Calculating MoneyLineDelta")
+            df.apply(self.calculateMoneyLineDelta, axis=1)
+            df['ML Delta'] = self.dict['ML_Delta'][:min]
+            #logging.info("Filtering (beta)...")
+            #df.apply(self.filter, axis=1)
+        
+        except Exception as e:
+            logging.error("Probably no data on this day...")
+            logging.error(e)
 
         return df
 
@@ -79,11 +85,17 @@ class seltract:
 
     def seltract(self):
         logging.info("Side/Total Tab selected")
-        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
-        select.select_by_visible_text('Side/Total')
-        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
-        select2.select_by_visible_text('College Basketball')
-        sleep(3)
+        try:
+            select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
+            select.select_by_visible_text('Side/Total')
+            sleep(1)
+            select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+            select2.select_by_visible_text('College Basketball')
+            sleep(1)
+        except Exception as selection_error:
+            logging.error(selection_error)
+            logging.error("Failed in seltract, moving on")
+            return
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         relevant_cols = ['pggc-col--time', 'pggc-col--team', 'pggc-col--open',
                             'pggc-col--current',  'pggc-col--cash', 'pggc-col--tickets']
@@ -114,12 +126,17 @@ class seltract:
 
     def getSides(self):
         logging.info("Sides Tab selected")
-        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
-        select.select_by_visible_text('Sides')
-        sleep(5)
-        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
-        select2.select_by_visible_text('College Basketball')
-        sleep(3)
+        try:
+            select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
+            select.select_by_visible_text('Sides')
+            sleep(1)
+            select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+            select2.select_by_visible_text('College Basketball')
+            sleep(1)
+        except Exception as selection_error:
+            logging.error(selection_error)
+            logging.error("Failed in getSides, moving on")
+            return
 
         relevant_cols = ['pggc-col--time', 'pggc-col--cash', 'pggc-col--tickets']
         tomorrow = False
@@ -151,11 +168,17 @@ class seltract:
     def moneyLineDelta(self):
         # ML | RL | PL
         logging.info("Getting MoneyLine Delta...")
-        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
-        select.select_by_visible_text('ML | RL | PL')
-        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
-        select2.select_by_visible_text('College Basketball')
-        sleep(3)
+        try:
+            select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
+            select.select_by_visible_text('ML | RL | PL')
+            sleep(1)
+            select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+            select2.select_by_visible_text('College Basketball')
+            sleep(1)
+        except Exception as selection_error:
+            logging.error(selection_error)
+            logging.error("Failed in moneyLineDelta, moving on")
+            return
 
         relevant_cols = ['pggc-col--time', 'pggc-col--open', 'pggc-col--current']
         tomorrow = False
@@ -228,26 +251,42 @@ class seltract:
         self.output_csv()
 
 def get_url_list(driver, urls):
+    logging.info("Collecting old URLs")
     url = "https://pregame.com/game-center"
     driver.get(url)
-    sleep(2)
-    for row in range(1,6):
-        for col in range(1,8):
-            try:
-                driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
-                driver.find_element(By.XPATH, f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
-                urls.append(driver.current_url)
-                sleep(0.75)
-            except Exception as e:
-                print(e)
-                print("Skip date bc don't exist in month yet")
+    sleep(1)
+
+    # Getting other months w code manually (sounds weird.)
+    driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
+    for x in range(3): # 3 months back
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/a[1]").click()
+        sleep(0.5)
+    for x in range(4):
+        for row in range(1,6):
+            for col in range(1,8):
+                try:
+                    driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
+                    driver.find_element(By.XPATH, f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
+                    urls.append(driver.current_url)
+                    sleep(0.75)
+                except Exception as e:
+                    print(e)
+                    print("Skip date bc don't exist in month")
+        driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/a[2]").click()
+        sleep(0.5)
+    logging.info("Finished collecting URLs")
+    
             
 
 logging.info("Starting Seltract.py")
 chrome_options = Options()
 #chrome_options.add_argument("--headless")
+chrome_options.add_argument("window-size=1024x768")
 chrome_options.add_argument('log-level=3')
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
+caps = DesiredCapabilities().CHROME
+caps["pageLoadStrategy"] = "none"
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options, desired_capabilities=caps)
 url_lst = []
 get_url_list(driver, url_lst)
 
