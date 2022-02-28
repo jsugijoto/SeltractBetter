@@ -1,11 +1,9 @@
-from numpy import datetime_as_string
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 from time import sleep
-import datetime
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse
