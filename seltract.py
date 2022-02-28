@@ -66,11 +66,8 @@ class seltract:
         try:
             logging.info("Outputting CSVs...")
             df = self.createOutput()
-            if os.path.isfile("./output/matchList.csv"):
-                df_old = pd.read_csv("./output/matchList.csv") 
-                pd.concat([df_old, df], ignore_index=True)
-            df.to_csv('./output/matchList.csv')
-            self.pickList.to_csv('./output/pickList.csv')
+            df.to_csv('./output/matchList.csv', mode='a')
+            self.pickList.to_csv('./output/pickList.csv', mode='a')
             logging.info("CSV output successful")
         except Exception as e:
             logging.error("CSV permission denied probably bc it's open??")
