@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -10,12 +12,14 @@ import numpy as np
 import pandas as pd
 from dateutil.parser import parse
 import logging as logger
+import os.path
+from datetime import datetime
 
 logger.basicConfig(filename='./log/debug.log',
                             filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                            format='%(asctime)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
-                            level=logger.DEBUG)
+                            level=logger.INFO)
 logging = logger.getLogger(__name__)
 logging.setLevel(logger.INFO)
 
@@ -59,16 +63,25 @@ class seltract:
         return df
 
     def output_csv(self):
-        logging.info("Outputting CSVs...")
-        df = self.createOutput()
-        df.to_csv('matchList.csv')
-        self.pickList.to_csv('pickList.csv')
-        logging.info("CSV output successful")
+        try:
+            logging.info("Outputting CSVs...")
+            df = self.createOutput()
+            if os.path.isfile("./output/matchList.csv"):
+                df_old = pd.read_csv("./output/matchList.csv") 
+                pd.concat([df_old, df], ignore_index=True)
+            df.to_csv('./output/matchList.csv')
+            self.pickList.to_csv('./output/pickList.csv')
+            logging.info("CSV output successful")
+        except Exception as e:
+            logging.error("CSV permission denied probably bc it's open??")
+            logging.error(e)
 
     def seltract(self):
         logging.info("Side/Total Tab selected")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Side/Total')
+        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+        select2.select_by_visible_text('College Basketball')
         sleep(3)
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         relevant_cols = ['pggc-col--time', 'pggc-col--team', 'pggc-col--open',
@@ -85,7 +98,8 @@ class seltract:
                             if child != '\n':
                                 if matching[0].split('-')[-1] not in self.dict:
                                     self.dict[matching[0].split('-')[-1]] = []
-                                self.dict[matching[0].split('-')[-1]].append(child.text)
+                                formatted = child.text.replace("½", '.5')
+                                self.dict[matching[0].split('-')[-1]].append(formatted)
                 if tomorrow:
                     break
             if tomorrow:
@@ -102,6 +116,9 @@ class seltract:
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Sides')
         sleep(3)
+        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+        select2.select_by_visible_text('College Basketball')
+        sleep(3)
 
         relevant_cols = ['pggc-col--time', 'pggc-col--cash', 'pggc-col--tickets']
         tomorrow = False
@@ -116,7 +133,8 @@ class seltract:
                             if child != '\n': 
                                 if f"{matching[0].split('-')[-1]}_sides" not in self.dict:
                                     self.dict[f"{matching[0].split('-')[-1]}_sides"] = []
-                                self.dict[f"{matching[0].split('-')[-1]}_sides"].append(child.text)
+                                formatted = child.text.replace("½", '.5')
+                                self.dict[f"{matching[0].split('-')[-1]}_sides"].append(formatted)
                 if tomorrow:
                     break
             if tomorrow:
@@ -134,6 +152,8 @@ class seltract:
         logging.info("Getting MoneyLine Delta...")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('ML | RL | PL')
+        select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
+        select2.select_by_visible_text('College Basketball')
         sleep(3)
 
         relevant_cols = ['pggc-col--time', 'pggc-col--open', 'pggc-col--current']
@@ -149,7 +169,8 @@ class seltract:
                             if child != '\n': 
                                 if f"{matching[0].split('-')[-1]}_ML" not in self.dict:
                                     self.dict[f"{matching[0].split('-')[-1]}_ML"] = []
-                                self.dict[f"{matching[0].split('-')[-1]}_ML"].append(child.text)
+                                formatted = child.text.replace("½", '.5')
+                                self.dict[f"{matching[0].split('-')[-1]}_ML"].append(formatted)
                 if tomorrow:
                     break
             if tomorrow:
@@ -209,30 +230,33 @@ def get_url_list(driver, urls):
     url = "https://pregame.com/game-center"
     driver.get(url)
     sleep(2)
-    for row in range(1,5):
+    for row in range(1,6):
         for col in range(1,8):
             try:
                 driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
                 driver.find_element(By.XPATH, f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
                 urls.append(driver.current_url)
+                sleep(0.75)
             except Exception as e:
                 print(e)
                 print("Skip date bc don't exist in month yet")
-            sleep(0.05)
-    sleep(3)
+            
 
-
+logging.info("Starting Seltract.py")
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+#chrome_options.add_argument("--headless")
 chrome_options.add_argument('log-level=3')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
 url_lst = []
-#urls = get_url_list(driver, url_lst)
+get_url_list(driver, url_lst)
 
 # Todays
-url = "https://pregame.com/game-center"
-output = seltract(driver, url)
+#url = "https://pregame.com/game-center"
+#output = seltract(driver, url)
 
 # Archive
-#for days in urls:
-#    output = seltract(days)
+start = datetime.now()
+for days in url_lst:
+    output = seltract(driver, days)
+end = datetime.now()
+logging.info(f"Script took {start-end} time")
