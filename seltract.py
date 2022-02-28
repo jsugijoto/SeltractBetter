@@ -290,22 +290,22 @@ def get_url_list(driver, urls):
 
 logging.info("Starting Seltract.py")
 chrome_options = Options()
-#chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("window-size=1024x768")
 chrome_options.add_argument('log-level=3')
 caps = DesiredCapabilities().CHROME
 caps["pageLoadStrategy"] = "none"
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options, desired_capabilities=caps)
 url_lst = []
-#get_url_list(driver, url_lst)
+get_url_list(driver, url_lst)
 
 # Todays
-url = "https://pregame.com/game-center"
-output = seltract(driver, url)
+#url = "https://pregame.com/game-center"
+#output = seltract(driver, url)
 
 # Archive
-'''start = datetime.now()
+start = datetime.now()
 for days in url_lst:
     output = seltract(driver, days)
 end = datetime.now()
-logging.info(f"Script took {start-end} time")'''
+logging.info(f"Script took {start-end} time")
