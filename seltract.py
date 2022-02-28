@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from operator import index
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -57,8 +58,8 @@ class seltract:
         logging.info("Calculating MoneyLineDelta")
         df.apply(self.calculateMoneyLineDelta, axis=1)
         df['ML Delta'] = self.dict['ML_Delta'][:min]
-        logging.info("Filtering (beta)...")
-        df.apply(self.filter, axis=1)
+        #logging.info("Filtering (beta)...")
+        #df.apply(self.filter, axis=1)
 
         return df
 
@@ -66,8 +67,11 @@ class seltract:
         try:
             logging.info("Outputting CSVs...")
             df = self.createOutput()
-            df.to_csv('./output/matchList.csv', mode='a')
-            self.pickList.to_csv('./output/pickList.csv', mode='a')
+            if os.path.isfile('./output/matchList.csv'):
+                df_old = pd.read_csv('./output/matchList.csv')
+                df = pd.concat([df_old, df], ignore_index=True)
+            df.to_csv('./output/matchList.csv', index=False)
+            #self.pickList.to_csv('./output/pickList.csv', mode='a')
             logging.info("CSV output successful")
         except Exception as e:
             logging.error("CSV permission denied probably bc it's open??")
@@ -112,7 +116,7 @@ class seltract:
         logging.info("Sides Tab selected")
         select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Sides')
-        sleep(3)
+        sleep(5)
         select2 = Select(self.driver.find_element(By.ID, 'pggcFilterSport'))
         select2.select_by_visible_text('College Basketball')
         sleep(3)
