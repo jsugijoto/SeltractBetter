@@ -3,3 +3,7 @@
 
 # Ignore environment variables
 *.env
+
+# Ignore log file
+./log/
+*.log

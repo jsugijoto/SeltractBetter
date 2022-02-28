@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
@@ -8,22 +9,30 @@ from time import sleep
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse
+import logging as logger
+
+logger.basicConfig(filename='./log/debug.log',
+                            filemode='a',
+                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logger.DEBUG)
+logging = logger.getLogger(__name__)
+logging.setLevel(logger.INFO)
 
 class seltract: 
-    def __init__(self, url) -> None:
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument('log-level=3')
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
+    def __init__(self, driver, url) -> None:
+        self.driver = driver
         self.dict = dict()
         self.pickList = pd.DataFrame()
         self.main(url)
         
     def load_page(self, url):
+        logging.info(f"Getting url: {url}")
         self.driver.get(url)
         sleep(2)
 
     def createOutput(self):
+        logging.info("Creating output...")
         df = pd.DataFrame()
         min = np.inf
         for keys in self.dict.keys():
@@ -42,17 +51,21 @@ class seltract:
         df['Delta'] = self.dict['delta']
         df.apply(self.calculateMoneyLineDelta, axis=1)
         df['ML Delta'] = self.dict['ML_Delta']
+        logging.info("Filtering (beta)...")
         df.apply(self.filter, axis=1)
 
         return df
 
     def output_csv(self):
+        logging.info("Outputting CSVs...")
         df = self.createOutput()
         df.to_csv('matchList.csv')
         self.pickList.to_csv('pickList.csv')
+        logging.info("CSV output successful")
 
     def seltract(self):
-        select = Select(self.driver.find_element_by_class_name('pggc-input--actiontype'))
+        logging.info("Side/Total Tab selected")
+        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Side/Total')
         sleep(5)
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -83,7 +96,8 @@ class seltract:
                 self.dict[keys].append("-")
 
     def getSides(self):
-        select = Select(self.driver.find_element_by_class_name('pggc-input--actiontype'))
+        logging.info("Sides Tab selected")
+        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('Sides')
         sleep(5)
 
@@ -115,7 +129,8 @@ class seltract:
     
     def moneyLineDelta(self):
         # ML | RL | PL
-        select = Select(self.driver.find_element_by_class_name('pggc-input--actiontype'))
+        logging.info("Getting MoneyLine Delta...")
+        select = Select(self.driver.find_element(By.CLASS_NAME, 'pggc-input--actiontype'))
         select.select_by_visible_text('ML | RL | PL')
         sleep(5)
 
@@ -145,6 +160,7 @@ class seltract:
             self.dict['current_ML'].append("-")
 
     def calculateDelta(self, row):
+        logging.info("Calculating Delta")
         if 'delta' not in self.dict:
                 self.dict['delta'] = []
         delta1 = row['Cash Sides'].strip('%')
@@ -156,6 +172,7 @@ class seltract:
             self.dict['delta'].append(delta)
 
     def calculateMoneyLineDelta(self, row):
+        logging.info("Calculating MoneyLineDelta")
         if 'ML_Delta' not in self.dict:
             self.dict['ML_Delta'] = []
         delta1 = row['Open ML']
@@ -178,8 +195,8 @@ class seltract:
                 else:
                     self.pickList = pd.concat([self.pickList, row.to_frame().T])
         except Exception as e:
-            print(e)
-            print("Hey it's the NHL :o; how the heck do I parse these characters")
+            logging.error(e)
+            logging.error("Hey it's the NHL :o; how the heck do I parse these characters")
 
     def main(self, url):
         self.load_page(url)
@@ -188,28 +205,34 @@ class seltract:
         self.seltract()
         self.output_csv()
 
-def get_url_list(self):
+def get_url_list(driver, urls):
     url = "https://pregame.com/game-center"
-    self.driver.get(url)
+    driver.get(url)
     sleep(2)
     for row in range(1,5):
         for col in range(1,8):
             try:
-                self.driver.find_element_by_xpath("//*[@id='pggcFilterGameDate']").click()
-                self.driver.find_element_by_xpath(f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
-                self.urls.append(self.driver.current_url)
+                driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
+                driver.find_element(By.XPATH, f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
+                urls.append(driver.current_url)
             except Exception as e:
                 print(e)
                 print("Skip date bc don't exist in month yet")
             sleep(0.05)
     sleep(3)
 
-url_lst = get_url_list()
+
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument('log-level=3')
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
+url_lst = []
+#urls = get_url_list(driver, url_lst)
 
 # Todays
-url = "www.pregame.com/game-center"
-output = seltract()
+url = "https://pregame.com/game-center"
+output = seltract(driver, url)
 
 # Archive
-#for days in url_lst:
+#for days in urls:
 #    output = seltract(days)
