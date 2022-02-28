@@ -222,10 +222,19 @@ class seltract:
             self.dict['ML_Delta'] = []
         delta1 = row['Open ML']
         delta2 = row['Current ML']
+        if "½" in row['Open ML']:
+            sign = "+" if delta1[0] == '+' else "-"
+            delta1.replace("½", ".5")
+            delta1 = sign + delta1.split[1]
+        if "½" in row['Current ML']:
+            sign = "+" if delta2[0] == '+' else "-"
+            delta2.replace("½", ".5")
+            delta2 = sign + delta2.split[1]
+            
         if delta1 in ['-', ''] or delta2 in ['-', '']:
             self.dict['ML_Delta'].append('-')
         else:
-            delta = float(''.join(filter(str.isdigit, delta1))) - float(''.join(filter(str.isdigit, delta2)))
+            delta = float(delta1) - float(delta2)
             self.dict['ML_Delta'].append(delta)
 
     def filter(self, row):
@@ -241,7 +250,7 @@ class seltract:
                     self.pickList = pd.concat([self.pickList, row.to_frame().T])
         except Exception as e:
             logging.error(e)
-            logging.error("Hey it's the NHL :o; how the heck do I parse these characters")
+            logging.error("how the heck do I parse these characters")
 
     def main(self, url):
         self.load_page(url)
@@ -288,15 +297,15 @@ caps = DesiredCapabilities().CHROME
 caps["pageLoadStrategy"] = "none"
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options, desired_capabilities=caps)
 url_lst = []
-get_url_list(driver, url_lst)
+#get_url_list(driver, url_lst)
 
 # Todays
-#url = "https://pregame.com/game-center"
-#output = seltract(driver, url)
+url = "https://pregame.com/game-center"
+output = seltract(driver, url)
 
 # Archive
-start = datetime.now()
+'''start = datetime.now()
 for days in url_lst:
     output = seltract(driver, days)
 end = datetime.now()
-logging.info(f"Script took {start-end} time")
+logging.info(f"Script took {start-end} time")'''
