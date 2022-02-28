@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 beautifulsoup4==4.10.0
 bs4==0.0.1
 pandas==1.4.1
@@ -5,3 +6,12 @@ requests==2.27.1
 selenium==4.1.0
 webdriver-manager==3.5.3
 numpy==1.22.2
+=======
+beautifulsoup4==4.10.0
+bs4==0.0.1
+pandas==1.4.1
+requests==2.27.1
+selenium==4.1.0
+webdriver-manager==3.5.3
+numpy==1.22.2
+>>>>>>> 799fb5ffd1e4d8d76f942b2ca6301d3aa1260933
