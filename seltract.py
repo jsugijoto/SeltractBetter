@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import Select
@@ -10,7 +11,10 @@ from dateutil.parser import parse
 
 class seltract: 
     def __init__(self) -> None:
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('log-level=3')
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
         self.dict = dict()
         self.pickList = pd.DataFrame()
         self.urls = []
@@ -188,7 +192,8 @@ class seltract:
                 else:
                     self.pickList = pd.concat([self.pickList, row.to_frame().T])
         except Exception as e:
-            print("Hey it's the NHL :o")
+            print(e)
+            print("Hey it's the NHL :o; how the heck do I parse these characters")
 
     def main(self):
         self.load_page()
