@@ -10,32 +10,18 @@ import pandas as pd
 from dateutil.parser import parse
 
 class seltract: 
-    def __init__(self) -> None:
+    def __init__(self, url) -> None:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('log-level=3')
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options)
         self.dict = dict()
         self.pickList = pd.DataFrame()
-        self.urls = []
-        self.main()
+        self.main(url)
         
-    def load_page(self):
-        url = "https://pregame.com/game-center"
+    def load_page(self, url):
         self.driver.get(url)
-        sleep(3)
-
-        #for row in range(1,5):
-        #    for col in range(1,8):
-        #        try:
-        #            self.driver.find_element_by_xpath("//*[@id='pggcFilterGameDate']").click()
-        #            self.driver.find_element_by_xpath(f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
-        #            self.urls.append(self.driver.current_url)
-        #        except Exception as e:
-        #            print(e)
-        #            print("Skip date bc don't exist in month yet")
-        #        sleep(0.05)
-        #sleep(3)
+        sleep(2)
 
     def createOutput(self):
         df = pd.DataFrame()
@@ -195,11 +181,35 @@ class seltract:
             print(e)
             print("Hey it's the NHL :o; how the heck do I parse these characters")
 
-    def main(self):
-        self.load_page()
+    def main(self, url):
+        self.load_page(url)
         self.getSides()
         self.moneyLineDelta()
         self.seltract()
         self.output_csv()
 
+def get_url_list(self):
+    url = "https://pregame.com/game-center"
+    self.driver.get(url)
+    sleep(2)
+    for row in range(1,5):
+        for col in range(1,8):
+            try:
+                self.driver.find_element_by_xpath("//*[@id='pggcFilterGameDate']").click()
+                self.driver.find_element_by_xpath(f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
+                self.urls.append(self.driver.current_url)
+            except Exception as e:
+                print(e)
+                print("Skip date bc don't exist in month yet")
+            sleep(0.05)
+    sleep(3)
+
+url_lst = get_url_list()
+
+# Todays
+url = "www.pregame.com/game-center"
 output = seltract()
+
+# Archive
+#for days in url_lst:
+#    output = seltract(days)
