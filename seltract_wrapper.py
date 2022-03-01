@@ -71,8 +71,8 @@ class seltract_wrapper:
                         self.urls.append(driver.current_url)
                         sleep(0.5)
                     except Exception as e:
-                        print(e)
-                        print("Skip date bc don't exist in month")
+                        logging.error(e)
+                        logging.info("Skip date bc don't exist in month")
             driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
             driver.find_element(By.XPATH, "/html/body/div[1]/div/a[2]").click()
             sleep(0.5)
