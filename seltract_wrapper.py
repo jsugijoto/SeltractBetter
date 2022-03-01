@@ -36,22 +36,31 @@ class seltract_wrapper:
         # Todays
         self.todays_matches()
 
-        # Archive. 
+        # Archive Change the input number here for the amount of months back
         #self.archive(3)
 
         end = time.time()
         logging.info(f"Script took {end-start} time")
 
     def todays_matches(self):
+        '''
+        Fetches todays matches that are listed on the base url
+        '''
         url = "https://pregame.com/game-center"
         seltract.seltract(self.driver, url)
 
     def archive(self, months_back):
+        '''
+        Fetches the last months_back list of matches
+        '''
         self.get_url_list(self.driver, months_back)
         for days in self.urls:
             seltract.seltract(self.driver, days)
 
     def get_url_list(self, driver, months_back):
+        '''
+        Fetches the list of URLs for each day in the months_back that is requested
+        '''
         logging.info("Collecting old URLs")
         url = "https://pregame.com/game-center"
         driver.get(url)
