@@ -1,26 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from operator import index
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 from time import sleep
 import numpy as np
 import pandas as pd
-from dateutil.parser import parse
 import logging as logger
 import os.path
-from datetime import datetime
 
 logger.basicConfig(filename='./log/debug.log',
                             filemode='a',
                             format='%(asctime)s %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
+                            datefmt='%Y/%m/%d %H:%M:%S',
                             level=logger.INFO)
 logging = logger.getLogger(__name__)
 logging.setLevel(logger.INFO)
@@ -240,8 +232,22 @@ class seltract:
     def filter(self, row):
         # Spit out the Current +/-# get rid of rest
         # ex: +1-105 >> +1 or -3.5-115 >> -3.5
+        delta = row['Delta']
+        ML_Delta = row['ML Delta']
         if row['Delta'] in ['', '-'] or row['ML Delta'] in ['', '-']:
             return
+        try:
+            if "½" in row['Delta']:
+                sign = "+" if delta[0] == '+' else "-"
+                delta.replace("½", ".5")
+                delta = sign + delta.split[1]
+            if "½" in row['ML Delta']:
+                sign = "+" if ML_Delta[0] == '+' else "-"
+                ML_Delta.replace("½", ".5")
+                ML_Delta = sign + ML_Delta.split[1]
+        except Exception as parse_error:
+            logging.error("Error parsing the 1/2 inside of Delta/ML Delta rows.")
+            logging.error(parse_error)
         try:
             if float(row['Delta']) > -5 and float(row['ML Delta']) < -10 and float(row['Current ML']) < 0:
                 if self.pickList.empty:
@@ -258,54 +264,3 @@ class seltract:
         self.moneyLineDelta()
         self.seltract()
         self.output_csv()
-
-def get_url_list(driver, urls):
-    logging.info("Collecting old URLs")
-    url = "https://pregame.com/game-center"
-    driver.get(url)
-    sleep(1)
-
-    # Getting other months w code manually (sounds weird.)
-    driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
-    for x in range(3): # 3 months back
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/a[1]").click()
-        sleep(0.5)
-    for x in range(4):
-        for row in range(1,6):
-            for col in range(1,8):
-                try:
-                    driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
-                    driver.find_element(By.XPATH, f"/html/body/div[1]/table/tbody/tr[{row}]/td[{col}]/a").click()
-                    urls.append(driver.current_url)
-                    sleep(0.75)
-                except Exception as e:
-                    print(e)
-                    print("Skip date bc don't exist in month")
-        driver.find_element(By.XPATH, "//*[@id='pggcFilterGameDate']").click()
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/a[2]").click()
-        sleep(0.5)
-    logging.info("Finished collecting URLs")
-    
-            
-
-logging.info("Starting Seltract.py")
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("window-size=1024x768")
-chrome_options.add_argument('log-level=3')
-caps = DesiredCapabilities().CHROME
-caps["pageLoadStrategy"] = "none"
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), chrome_options=chrome_options, desired_capabilities=caps)
-url_lst = []
-get_url_list(driver, url_lst)
-
-# Todays
-#url = "https://pregame.com/game-center"
-#output = seltract(driver, url)
-
-# Archive
-start = datetime.now()
-for days in url_lst:
-    output = seltract(driver, days)
-end = datetime.now()
-logging.info(f"Script took {start-end} time")
