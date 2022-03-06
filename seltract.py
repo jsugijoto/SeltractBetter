@@ -91,7 +91,6 @@ class seltract:
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         relevant_cols = ['pggc-col--time', 'pggc-col--team', 'pggc-col--open',
                             'pggc-col--current',  'pggc-col--cash', 'pggc-col--tickets']
-        tomorrow = False
 
         # Get matches that aren't complete and only of todays games.
         for match in html.find_all('div', {'class': 'pggc-game'}):
@@ -105,10 +104,6 @@ class seltract:
                                     self.dict[matching[0].split('-')[-1]] = []
                                 formatted = child.text.replace("½", '.5')
                                 self.dict[matching[0].split('-')[-1]].append(formatted)
-                if tomorrow:
-                    break
-            if tomorrow:
-                break
             # Separator Between Matches
             append_list = ['time', 'team', 'cash', 'tickets']
             for keys in append_list:
@@ -131,7 +126,6 @@ class seltract:
             return
 
         relevant_cols = ['pggc-col--time', 'pggc-col--cash', 'pggc-col--tickets']
-        tomorrow = False
 
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         for match in html.find_all('div', {'class': 'pggc-game'}):
@@ -145,11 +139,6 @@ class seltract:
                                     self.dict[f"{matching[0].split('-')[-1]}_sides"] = []
                                 formatted = child.text.replace("½", '.5')
                                 self.dict[f"{matching[0].split('-')[-1]}_sides"].append(formatted)
-                if tomorrow:
-                    break
-            if tomorrow:
-                break
-            
             if "cash_sides" not in self.dict:
                 self.dict['cash_sides'] = []
             if "tickets_sides" not in self.dict:
@@ -173,7 +162,6 @@ class seltract:
             return
 
         relevant_cols = ['pggc-col--time', 'pggc-col--open', 'pggc-col--current']
-        tomorrow = False
 
         html = BeautifulSoup(self.driver.page_source, 'html.parser')
         for match in html.find_all('div', {'class': 'pggc-game'}):
@@ -187,10 +175,6 @@ class seltract:
                                     self.dict[f"{matching[0].split('-')[-1]}_ML"] = []
                                 formatted = child.text.replace("½", '.5')
                                 self.dict[f"{matching[0].split('-')[-1]}_ML"].append(formatted)
-                if tomorrow:
-                    break
-            if tomorrow:
-                break
             if "open_ML" not in self.dict:
                 self.dict['open_ML'] = []
             if "current_ML" not in self.dict:
